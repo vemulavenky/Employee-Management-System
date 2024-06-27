@@ -70,7 +70,7 @@ def create_department(db: Session, department: Structure.Department):
     return db_department 
 
 def get_employees_by_department(db: Session, department_id: int):
-    return db.query(Tables.Employee).filter(Tables.Employee_Information.Department_id == department_id).all() 
+    return db.query(Tables.Employee_Information).filter(Tables.Employee_Information.Department_id == department_id).all() 
 
 
 def create_role(db: Session, role: Structure.Role):
