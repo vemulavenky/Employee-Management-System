@@ -79,7 +79,7 @@ def read_departments(skip: int = 0, limit: int = 10, db: Session = Depends(get_d
 def create_role(role:Structure.RoleCreate, db: Session= Depends(get_db)):
     return Logics.create_role(db=db, role=role) 
 
-app.get("/roles/{role_id}", response_model=Structure.Role)
+@app.get("/roles/{role_id}", response_model=Structure.Role)
 def read_role(role_id: int, db: Session = Depends(get_db)):
     db_role = Logics.get_role(db, role_id=role_id)
     if db_role is None:
