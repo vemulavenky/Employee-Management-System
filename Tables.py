@@ -28,4 +28,13 @@ class Role(Base):
     id = Column(Integer, primary_key=True, index=True)
     Name_Of_Role = Column(String, unique=True, index=True)
 
+
+class Attendance(Base):
+    __tablename__ = 'attendance'
+    
+    id = Column(Integer, primary_key=True)
+    employee_id = Column(Integer, ForeignKey('EmployeeDeatils.id'), nullable=False)
+    date = Column(Date, nullable=False)
+    status = Column(String, nullable=False)
+
 Base.metadata.create_all(bind=engine)

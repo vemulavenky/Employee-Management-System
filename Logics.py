@@ -1,5 +1,6 @@
+from fastapi import Depends, HTTPException
 from sqlalchemy.orm import Session
-import Tables, Structure
+import Tables, Structure 
 
 
 
@@ -9,12 +10,14 @@ def get_employee(db: Session, employee_id: int):
 def get_employees(db: Session, skip: int = 0, limit: int = 10):
     return db.query(Tables.Employee_Information).offset(skip).limit(limit).all()
 
+
 def create_employee(db: Session, employee: Structure.Employee):
     db_employee = Tables.Employee_Information(**employee.dict())
     db.add(db_employee)
     db.commit()
     db.refresh(db_employee)
     return db_employee 
+
 
 def update_employee(db: Session, employee_id: int, employee_update: Structure.EmployeeCreate):
     db_employee = db.query(Tables.Employee_Information).filter(Tables.Employee_Information.id == employee_id).first()
@@ -69,10 +72,6 @@ def create_department(db: Session, department: Structure.Department):
     db.refresh(db_department)
     return db_department 
 
-def get_employees_by_department(db: Session, department_id: int):
-    return db.query(Tables.Employee).filter(Tables.Employee_Information.Department_id == department_id).all() 
-
-
 def create_role(db: Session, role: Structure.Role):
     db_role = Tables.Role(**role.dict())
     db.add(db_role)
@@ -82,3 +81,44 @@ def create_role(db: Session, role: Structure.Role):
 
 def get_role(db: Session, role_id: int):
     return db.query(Tables.Role).filter(Tables.Role.id == role_id).first()
+
+
+def get_employees_by_role(db: Session, role_name: str):
+    return db.query(Tables.Employee_Information.First_Name, Tables.Employee_Information.Last_Name, Structure.Attendance.date, Structure.Attendance.status) \
+        .join(Structure.Role, Tables.Employee_Information.Role_id == Structure.Role.id) \
+        .join(Structure.Attendance, Tables.Employee_Information.id == Structure.Attendance.employee_id) \
+        .filter(Structure.Role.name == role_name).all() 
+'''
+def create_attendance(db: Session, attendance: Structure.AttendanceCreate):
+    # Find the role by name
+    role = db.query(Tables.Role).filter(Tables.Role.Name_Of_Role == attendance.role_name).first()
+    if not role:
+        raise HTTPException(status_code=404, detail="Role not found")
+    
+    employee = db.query(Tables.Employee_Information).filter(
+        Tables.Employee_Information.id == attendance.employee_id, 
+        Tables.Employee_Information.Role_id == Tables.Role.id
+    ).first()
+    if not employee:
+        raise HTTPException(status_code=404, detail="Employee not found for the given role")
+    db_attendance = Tables.Attendance(
+        employee_id=employee.id,
+        date=attendance.date,
+        status=attendance.status
+    )
+    db.add(db_attendance)
+    db.commit()
+    db.refresh(db_attendance)
+    return db_attendance
+'''
+def create_attendance(db: Session, attendance: Structure.AttendanceCreate):
+    db_attendance = Tables.Attendance(**attendance.dict())
+    db.add(db_attendance)
+    db.commit()
+    db.refresh(db_attendance)
+    return db_attendance
+
+
+
+
+

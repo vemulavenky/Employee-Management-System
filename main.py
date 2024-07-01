@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
-import Structure, Logics, database
+import Structure, Logics, database,Tables
 
 app = FastAPI(title="Employee Information")
 
@@ -25,7 +25,7 @@ def read_employee(employee_id: int, db: Session = Depends(get_db)):
     db_employee = Logics.get_employee(db, employee_id=employee_id)
     if db_employee is None:
         raise HTTPException(status_code=404, detail="Employee not found")
-    return db_employee 
+    return db_employee
 
 @app.get("/employees/", response_model=list[Structure.Employee], tags=["Employee_Information"])
 def read_employees(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
@@ -56,7 +56,7 @@ def read_employees_with_departments(department_id:int, db: Session = Depends(get
         raise HTTPException(status_code=404, detail="No employees found")
     return employees_with_departments
 
-#---------------------------------------DepartMentInfo Endpoints -------------------#
+#------------------------------DepartMentInfo Endpoints -------------------#
 @app.post("/departments/", response_model=Structure.Department, tags=["Department"])
 def create_department(department: Structure.DepartmentCreate, db: Session = Depends(get_db)):
     return Logics.create_department(db=db, department=department)
@@ -75,14 +75,74 @@ def read_departments(skip: int = 0, limit: int = 10, db: Session = Depends(get_d
 #-----------------------End Of the Department Deatails----------------------- 
 
 
-@app.post("/role/", response_model=Structure.Role, tags=["Role"])
+@app.post("/role/",  tags=["Role"])
 def create_role(role:Structure.RoleCreate, db: Session= Depends(get_db)):
     return Logics.create_role(db=db, role=role) 
 
-app.get("/roles/{role_id}", response_model=Structure.Role)
+@app.get("/roles/{role_id}", response_model=Structure.Role, tags=["Role"])
 def read_role(role_id: int, db: Session = Depends(get_db)):
     db_role = Logics.get_role(db, role_id=role_id)
     if db_role is None:
         raise HTTPException(status_code=404, detail="Role not found")
-    return db_role 
+    return db_role
 
+
+@app.post("/attendance/", tags=["Attendence"])
+def create_attendance(attendance: Structure.AttendanceCreate, db: Session = Depends(get_db)):
+
+    role = db.query(Tables.Role).filter(Tables.Role.Name_Of_Role == attendance.role_name).first()
+
+    if not role:
+        raise HTTPException(status_code=404, detail="Role not found")
+    
+    if role.Name_Of_Role not in ["Manager", "IT Manager", "Team Lead"]:  # Add any other managerial roles here
+        raise HTTPException(status_code=403, detail="Only Managers or Team Leads can mark attendance")
+    new_attendance = Tables.Attendance(
+        employee_id=attendance.employee_id,
+        date=attendance.date,
+        status=attendance.status
+    )
+    db.add(new_attendance)
+    db.commit()
+    db.refresh(new_attendance)
+    return new_attendance 
+@app.get("/attendence/{employee_id}", tags=["Attendence"]) 
+def get_attendence_details(employee_id : int, db:Session=Depends(get_db)):
+    employee_details = db.query(Tables.Employee_Information).filter(Tables.Employee_Information.id == employee_id).first()
+    if not employee_details:
+        raise HTTPException(status_code=404, detail="Employee not found")
+    attendence_details = db.query(Tables.Attendance).filter(Tables.Attendance.employee_id ==employee_id).first() 
+    role = db.query(Tables.Role).filter(Tables.Role.id == employee_details.Role_id).first()
+
+    if attendence_details :
+        employee_presence = "Present" 
+    else :
+        employee_presence = "Absent" 
+
+    return {
+        "id": employee_details.id,
+        "First_Name": employee_details.First_Name,
+        "Last_name": employee_details.Last_Name,
+        "Role" : role.Name_Of_Role,
+        "attendance_status": employee_presence 
+    } 
+
+@app.put("/attendence/{employee_id}/update", tags=["Attendence"]) 
+def updation_attendence(employee_id : int , attendence_update: Structure.Attendence_Update, db: Session = Depends(get_db)): 
+
+    employee = db.query(Tables.Employee_Information).filter(Tables.Employee_Information.id == employee_id).first() 
+
+    if not employee:
+         raise HTTPException(status_code=404, detail="Employee not found") 
+    
+    attendence = db.query(Tables.Attendance).filter(Tables.Attendance.employee_id == employee.id).first() 
+
+    if not attendence:
+        raise HTTPException(status_code=404, detail=f"No attendance record found for employee '{employee.Last_Name}'") 
+    
+    attendence.status = attendence_update.status 
+
+    db.commit()
+    db.refresh(attendence) 
+
+    return attendence

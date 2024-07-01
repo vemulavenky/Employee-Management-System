@@ -20,6 +20,9 @@ class EmployeeCreate(EmployeeBase):
 class Employee(EmployeeBase):
     id : int 
 
+    class Config:
+        from_attributes = True
+
 
 class DepartmentBase(BaseModel):
     Name_of_Department: str
@@ -35,11 +38,15 @@ class DepartmentUpdate(BaseModel):
 class Department(DepartmentBase):
     id: int
 
+    class Config:
+        from_attributes = True
+
 
 class EmployeeWithDepartment(BaseModel):
     First_Name: str
     Last_Name: str
-    Name_of_Department: str
+    Name_of_Department: str 
+    Name_of_Role : str
 
 class RoleBase(BaseModel):
      Name_Of_Role: str
@@ -49,4 +56,25 @@ class RoleCreate(RoleBase):
 
 class Role(RoleBase):
     id: int
-    employees: List[Employee] = []
+
+    class Config:
+        from_attributes = True
+
+
+class AttendanceBase(BaseModel):
+    employee_id: int
+    date: date
+    status: str
+
+class AttendanceCreate(AttendanceBase):
+    role_name:str 
+
+class Attendence_Update(BaseModel):
+    employee_id: int
+    date: date
+    status: str
+
+class Attendance(AttendanceBase):
+    id: int
+    class Config:
+        from_attributes = True
