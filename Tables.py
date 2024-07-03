@@ -4,6 +4,7 @@ from database import Base, engine
 class Employee_Information(Base):
     __tablename__ = 'EmployeeDeatils' 
 
+
     id = Column(Integer, primary_key=True) 
     First_Name = Column(String)
     Last_Name = Column(String) 
