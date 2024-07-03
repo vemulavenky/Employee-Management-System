@@ -1,4 +1,5 @@
 from typing import List
+from typing import List
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 import Structure, Logics, database
