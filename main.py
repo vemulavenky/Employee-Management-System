@@ -137,3 +137,5 @@ def read_pending_leave_requests_for_manager(manager_id: int, db: Session = Depen
 @app.put("/leave_requests/{leave_request_id}/approve", tags=["Leave"])
 def approve_leave_request(leave_request_id: int, approval: Structure.LeaveApproval, db: Session = Depends(get_db)):
     return Logics.approve_leave_request(db, leave_request_id,approval)
+
+StopAsyncIteration
